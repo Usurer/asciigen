@@ -4,7 +4,7 @@ from PIL import Image, ImageFont, ImageDraw, ImageWin
 
 def main():
      #An image to convert to ascii
-    bwGoat = Image.open("goat.jpg")
+    bwGoat = Image.open("bird.jpg")
     #Making it black-n-white
     bwGoat = bwGoat.convert('L')
 ##    bwGoat.save("bwGoat.jpg")
@@ -14,13 +14,15 @@ def main():
     goatPixels = bwGoat.load()
     w = bwGoat.size[0]
     h = bwGoat.size[1]
+    wScale = 2  # was 1
+    hScale = 3  # was 2
 
     imageDensity = []
     #Goat image is 600x400. I use 2x1 pieces as a single slice to be changed with ascii symbol
-    for row in range(0, 199):
+    for row in range(0, h / hScale - 1):
         densityRow = []
-        for col in range(0, 599):
-            d = calculateSliceWeight(goatPixels, [row*2, col*1])
+        for col in range(0, w / wScale - 1):
+            d = calculateSliceWeight(goatPixels, [row * hScale, col * wScale], wScale, hScale)
             densityRow.append(d)
 ##            sys.stdout.write(str(d) + ' ')
         imageDensity.append(densityRow)
@@ -56,8 +58,12 @@ def main():
     f = open('result_2.txt', 'w')
     for row in normalizedDensities:
         for col in row:
-            symb = getSymbolByDensity(sd, discreteArray[col])
-            f.write(symb)
+            try:
+                symb = getSymbolByDensity(sd, discreteArray[col])
+                f.write(symb)
+            except IndexError:
+                continue
+
         f.write('\n')
 
     print 'Conversion finished!'
@@ -111,10 +117,10 @@ def calculateSymbolWeight(image):
 
 
 #A weight of all pixels in a piece of an image
-def calculateSliceWeight(pixArr, sliceTuple):
+def calculateSliceWeight(pixArr, sliceTuple, wScale, hScale):
     res = 0
-    for row in range (sliceTuple[1], sliceTuple[1] + 2):
-        for col in range (sliceTuple[0], sliceTuple[0] + 1):
+    for row in range (sliceTuple[1], sliceTuple[1] + wScale):
+        for col in range (sliceTuple[0], sliceTuple[0] + hScale):
             try:
                 res = res + (255 - pixArr[row, col])
             except (IndexError):
